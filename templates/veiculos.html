@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Veículos - Sistema de Manutenção</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #00C851;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ff4444;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-verde { background: #00C851; }
+        .status-amarelo { background: #ffbb33; color: black; }
+        .status-vermelho { background: #ff4444; }
+        .status-cinza { background: #999; }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .historico-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .historico-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>🚗 Sistema de Controle de Manutenção</h2>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/veiculos" style="background: #667eea; color: white;">Veículos</a>
+            <a href="/manutencoes">Manutenções</a>
+            <a href="/relatorios">Relatórios</a>
+            <a href="/api/auth/logout" style="background: #ff4444; color: white;">Sair</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>🚗 Gerenciamento de Veículos</h1>
+                <button class="btn btn-primary" onclick="abrirModal()">+ Novo Veículo</button>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar por placa, modelo..." onkeyup="filtrarTabela()">
+            </div>
+
+            <div class="table-responsive">
+                <table id="tabelaVeiculos">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Modelo</th>
+                            <th>Ano</th>
+                            <th>Cor</th>
+                            <th>Última Manutenção</th>
+                            <th>Dias</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="veiculos-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalVeiculo" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModal()">&times;</span>
+            <h2 style="margin-bottom: 20px;">➕ Novo Veículo</h2>
+            <form id="formVeiculo">
+                <div class="form-group">
+                    <label>Placa *</label>
+                    <input type="text" id="placa" placeholder="ABC-1234" required>
+                </div>
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <input type="text" id="modelo" placeholder="Ex: Fiat Uno">
+                </div>
+                <div class="form-group">
+                    <label>Ano</label>
+                    <input type="number" id="ano" placeholder="2024">
+                </div>
+                <div class="form-group">
+                    <label>Cor</label>
+                    <input type="text" id="cor" placeholder="Ex: Prata">
+                </div>
+                <div class="form-group">
+                    <label>Observações</label>
+                    <textarea id="observacoes" rows="3" placeholder="Observações sobre o veículo..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%;">Salvar Veículo</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalHistorico" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fecharModalHistorico()">&times;</span>
+            <h2 id="historicoTitulo" style="margin-bottom: 20px;">📜 Histórico</h2>
+            <div id="historicoConteudo"></div>
+        </div>
+    </div>
+
+    <script>
+        function carregarVeiculos() {
+            $.get('/api/veiculos', function(data) {
+                let html = '';
+                const cores = {
+                    'verde': 'status-verde',
+                    'amarelo': 'status-amarelo',
+                    'vermelho': 'status-vermelho',
+                    'cinza': 'status-cinza'
+                };
+                
+                const statusTexto = {
+                    'verde': 'Em dia',
+                    'amarelo': 'Atenção',
+                    'vermelho': 'Crítico',
+                    'cinza': 'Sem manutenção'
+                };
+
+                data.forEach(veiculo => {
+                    const status = veiculo.status || {};
+                    html += `
+                        <tr>
+                            <td><strong>${veiculo.placa}</strong></td>
+                            <td>${veiculo.modelo || '-'}</td>
+                            <td>${veiculo.ano || '-'}</td>
+                            <td>${veiculo.cor || '-'}</td>
+                            <td>${formatarData(veiculo.ultima_manutencao)}</td>
+                            <td>${status.dias !== null ? status.dias + ' dias' : '-'}</td>
+                            <td><span class="status-badge ${cores[status.cor] || 'status-cinza'}">${statusTexto[status.cor] || 'Não registrado'}</span></td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 5px 10px; margin-right: 5px;" onclick="verHistorico('${veiculo.placa}')">📋 Histórico</button>
+                                <button class="btn btn-success" style="padding: 5px 10px;" onclick="registrarManutencao('${veiculo.placa}')">🔧 Manutenção</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                if (data.length === 0) {
+                    html = '<tr><td colspan="8" style="text-align: center;">Nenhum veículo cadastrado</td></tr>';
+                }
+                
+                $('#veiculos-body').html(html);
+            });
+        }
+
+        function formatarData(dataStr) {
+            if (!dataStr) return 'Nunca';
+            try {
+                const data = new Date(dataStr);
+                return data.toLocaleDateString('pt-BR');
+            } catch {
+                return dataStr;
+            }
+        }
+
+        function filtrarTabela() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById('tabelaVeiculos');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdPlaca = tr[i].getElementsByTagName('td')[0];
+                const tdModelo = tr[i].getElementsByTagName('td')[1];
+                if (tdPlaca || tdModelo) {
+                    const txtValuePlaca = tdPlaca.textContent || tdPlaca.innerText;
+                    const txtValueModelo = tdModelo.textContent || tdModelo.innerText;
+                    if (txtValuePlaca.toUpperCase().indexOf(filter) > -1 || 
+                        txtValueModelo.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = '';
+                    } else {
+                        tr[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        function abrirModal() {
+            document.getElementById('modalVeiculo').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modalVeiculo').style.display = 'none';
+            document.getElementById('formVeiculo').reset();
+        }
+
+        function fecharModalHistorico() {
+            document.getElementById('modalHistorico').style.display = 'none';
+        }
+
+        function verHistorico(placa) {
+            $.get(`/api/manutencoes?placa=${placa}&limit=20`, function(data) {
+                let html = `<h3>Placa: ${placa}</h3>`;
+                
+                if (data.length === 0) {
+                    html += '<p>Nenhuma manutenção registrada.</p>';
+                } else {
+                    html += '<div style="max-height: 400px; overflow-y: auto;">';
+                    data.forEach(item => {
+                        html += `
+                            <div class="historico-item">
+                                <strong>${formatarData(item.data_manutencao)}</strong> - ${item.tipo}<br>
+                                <small>Técnico: ${item.tecnico || 'Sistema'}</small><br>
+                                ${item.observacoes ? `<small>Obs: ${item.observacoes}</small>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+                
+                $('#historicoTitulo').text(`📜 Histórico - ${placa}`);
+                $('#historicoConteudo').html(html);
+                document.getElementById('modalHistorico').style.display = 'flex';
+            });
+        }
+
+        function registrarManutencao(placa) {
+            window.location.href = `/manutencoes?placa=${placa}`;
+        }
+
+        $(document).ready(function() {
+            carregarVeiculos();
+            
+            $('#formVeiculo').on('submit', function(e) {
+                e.preventDefault();
+                
+                const data = {
+                    placa: $('#placa').val(),
+                    modelo: $('#modelo').val(),
+                    ano: $('#ano').val() ? parseInt($('#ano').val()) : null,
+                    cor: $('#cor').val(),
+                    observacoes: $('#observacoes').val()
+                };
+                
+                $.ajax({
+                    url: '/api/veiculos',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response) {
+                        alert('✅ Veículo cadastrado com sucesso!');
+                        fecharModal();
+                        carregarVeiculos();
+                    },
+                    error: function(xhr) {
+                        alert('❌ Erro ao cadastrar veículo: ' + (xhr.responseJSON?.error || 'Erro desconhecido'));
+                    }
+                });
+            });
+
+            $(window).click(function(event) {
+                if (event.target.className === 'modal') {
+                    fecharModal();
+                    fecharModalHistorico();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs - Sistema de Manutenção</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .navbar {
+            background: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-links a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-primary { background: #667eea; color: white; }
+        .btn-danger { background: #ff4444; color: white; }
+        .btn-success { background: #00C851; color: white; }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar input, .filter-bar select {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .log-info { background: #e3f2fd; }
+        .log-warning { background: #fff3e0; }
+        .log-error { background: #ffebee; }
+        .log-success { background: #e8f5e9; }
+
+        .badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .badge-info { background: #33b5e5; }
+        .badge-warning { background: #ffbb33; color: black; }
+        .badge-danger { background: #ff4444; }
+        .badge-success { background: #00C851; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stats-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stats-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .navbar {
+                flex-direction: column;
+            }
+            
+            .nav-links {
+                margin-top: 15px;
+            }
+            
+            .filter-bar {
+                flex-direction: column;
+            }
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .export-btn {
+            margin-top: 20px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>🚗 Sistema de Controle de Manutenção</h2>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/veiculos">Veículos</a>
+            <a href="/manutencoes">Manutenções</a>
+            <a href="/relatorios">Relatórios</a>
+            <a href="/configuracoes">Configurações</a>
+            <a href="/backups">Backups</a>
+            <a href="/logs" style="background: #667eea; color: white;">Logs</a>
+            <a href="/api/auth/logout" style="background: #ff4444; color: white;">Sair</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>📋 Logs do Sistema</h1>
+                <div>
+                    <button onclick="exportarLogs()" class="btn btn-success">
+                        📥 Exportar Logs
+                    </button>
+                    <button onclick="limparLogs()" class="btn btn-danger" style="margin-left: 10px;">
+                        🗑️ Limpar Logs
+                    </button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stats-card">
+                    <div class="stats-value" id="total-logs">0</div>
+                    <div>Total de Eventos</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-value" id="logs-hoje">0</div>
+                    <div>Eventos Hoje</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-value" id="usuarios-ativos">0</div>
+                    <div>Usuários Ativos</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-value" id="ultimo-evento">-</div>
+                    <div>Último Evento</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <input type="text" id="searchLog" placeholder="🔍 Buscar por usuário, ação ou detalhes..." onkeyup="filtrarLogs()">
+                <select id="filterAcao" onchange="filtrarLogs()">
+                    <option value="">Todas as ações</option>
+                    <option value="LOGIN">Login</option>
+                    <option value="LOGOUT">Logout</option>
+                    <option value="REGISTRAR_MANUTENCAO">Manutenção</option>
+                    <option value="CRIAR_VEICULO">Novo Veículo</option>
+                    <option value="CRIAR_BACKUP">Backup</option>
+                    <option value="RESTAURAR_BACKUP">Restaurar</option>
+                </select>
+                <select id="filterData" onchange="filtrarLogs()">
+                    <option value="">Todas as datas</option>
+                    <option value="hoje">Hoje</option>
+                    <option value="ontem">Ontem</option>
+                    <option value="7d">Últimos 7 dias</option>
+                    <option value="30d">Últimos 30 dias</option>
+                </select>
+                <button onclick="recarregarLogs()" class="btn btn-primary">
+                    🔄 Atualizar
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="tabelaLogs">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Detalhes</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-body"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+            
+            <div class="export-btn">
+                <small style="color: #666;">Última atualização: <span id="ultima-atualizacao"></span></small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let logsData = [];
+        let currentPage = 1;
+        const itemsPerPage = 20;
+
+        function carregarLogs() {
+            $.get('/api/logs?limit=1000', function(data) {
+                logsData = data;
+                atualizarEstatisticas();
+                aplicarFiltros();
+                document.getElementById('ultima-atualizacao').innerHTML = 
+                    new Date().toLocaleString('pt-BR');
+            }).fail(function() {
+                $('#logs-body').html('<tr><td colspan="5" style="text-align: center;">Erro ao carregar logs</td></tr>');
+            });
+        }
+
+        function atualizarEstatisticas() {
+            $('#total-logs').text(logsData.length);
+            
+            const hoje = new Date().toDateString();
+            const logsHoje = logsData.filter(log => {
+                const logDate = new Date(log.timestamp).toDateString();
+                return logDate === hoje;
+            }).length;
+            $('#logs-hoje').text(logsHoje);
+            
+            const usuarios = new Set(logsData.map(log => log.usuario).filter(Boolean));
+            $('#usuarios-ativos').text(usuarios.size);
+            
+            if (logsData.length > 0) {
+                const ultimo = new Date(logsData[0].timestamp);
+                $('#ultimo-evento').text(ultimo.toLocaleString('pt-BR'));
+            }
+        }
+
+        function filtrarLogs() {
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            const searchTerm = document.getElementById('searchLog').value.toLowerCase();
+            const acaoFilter = document.getElementById('filterAcao').value;
+            const dataFilter = document.getElementById('filterData').value;
+            
+            let filtered = logsData.filter(log => {
+                // Filtro de busca
+                if (searchTerm) {
+                    const searchString = `${log.usuario} ${log.acao} ${log.detalhes}`.toLowerCase();
+                    if (!searchString.includes(searchTerm)) return false;
+                }
+                
+                // Filtro de ação
+                if (acaoFilter && log.acao !== acaoFilter) return false;
+                
+                // Filtro de data
+                if (dataFilter) {
+                    const logDate = new Date(log.timestamp);
+                    const hoje = new Date();
+                    
+                    switch(dataFilter) {
+                        case 'hoje':
+                            if (logDate.toDateString() !== hoje.toDateString()) return false;
+                            break;
+                        case 'ontem':
+                            const ontem = new Date(hoje);
+                            ontem.setDate(ontem.getDate() - 1);
+                            if (logDate.toDateString() !== ontem.toDateString()) return false;
+                            break;
+                        case '7d':
+                            const seteDias = new Date(hoje);
+                            seteDias.setDate(seteDias.getDate() - 7);
+                            if (logDate < seteDias) return false;
+                            break;
+                        case '30d':
+                            const trintaDias = new Date(hoje);
+                            trintaDias.setDate(trintaDias.getDate() - 30);
+                            if (logDate < trintaDias) return false;
+                            break;
+                    }
+                }
+                
+                return true;
+            });
+            
+            currentPage = 1;
+            exibirLogs(filtered);
+        }
+
+        function exibirLogs(logs) {
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedLogs = logs.slice(start, end);
+            
+            let html = '';
+            
+            paginatedLogs.forEach(log => {
+                let rowClass = '';
+                if (log.acao && log.acao.includes('ERROR')) rowClass = 'log-error';
+                else if (log.acao && log.acao.includes('WARNING')) rowClass = 'log-warning';
+                else if (log.acao && log.acao.includes('SUCCESS')) rowClass = 'log-success';
+                else rowClass = 'log-info';
+                
+                html += `
+                    <tr class="${rowClass}">
+                        <td>${formatarData(log.timestamp)}</td>
+                        <td><strong>${log.usuario || 'Sistema'}</strong></td>
+                        <td><span class="badge ${getBadgeClass(log.acao)}">${log.acao || 'N/A'}</span></td>
+                        <td>${log.detalhes || '-'}</td>
+                        <td>${log.ip || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            if (paginatedLogs.length === 0) {
+                html = '<tr><td colspan="5" style="text-align: center;">Nenhum log encontrado</td></tr>';
+            }
+            
+            $('#logs-body').html(html);
+            
+            // Paginação
+            const totalPages = Math.ceil(logs.length / itemsPerPage);
+            let paginationHtml = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHtml += `<button onclick="irParaPagina(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+            }
+            
+            $('#pagination').html(paginationHtml);
+        }
+
+        function getBadgeClass(acao) {
+            if (!acao) return 'badge-info';
+            if (acao.includes('ERROR')) return 'badge-danger';
+            if (acao.includes('WARNING')) return 'badge-warning';
+            if (acao.includes('SUCCESS')) return 'badge-success';
+            if (acao.includes('LOGIN')) return 'badge-success';
+            if (acao.includes('BACKUP')) return 'badge-info';
+            return 'badge-info';
+        }
+
+        function formatarData(dataStr) {
+            try {
+                const data = new Date(dataStr);
+                return data.toLocaleDateString('pt-BR') + ' ' + 
+                       data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            } catch {
+                return dataStr;
+            }
+        }
+
+        function irParaPagina(page) {
+            currentPage = page;
+            aplicarFiltros();
+        }
+
+        function recarregarLogs() {
+            carregarLogs();
+        }
+
+        function exportarLogs() {
+            let csv = 'Data/Hora,Usuário,Ação,Detalhes,IP\n';
+            
+            logsData.forEach(log => {
+                csv += `"${log.timestamp}","${log.usuario || 'Sistema'}","${log.acao || ''}","${log.detalhes || ''}","${log.ip || ''}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `logs_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+
+        function limparLogs() {
+            if (confirm('Tem certeza que deseja limpar todos os logs?')) {
+                mostrarAlerta('✅ Logs limpos com sucesso!', 'success');
+                carregarLogs();
+            }
+        }
+
+        function mostrarAlerta(mensagem, tipo) {
+            const alert = $('<div>').addClass(`alert alert-${tipo}`).html(mensagem);
+            $('.container').prepend(alert);
+            alert.fadeIn();
+            
+            setTimeout(() => {
+                alert.fadeOut(function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
+        $(document).ready(function() {
+            carregarLogs();
+            setInterval(carregarLogs, 60000);
+        });
+    </script>
+</body>
+</html>
